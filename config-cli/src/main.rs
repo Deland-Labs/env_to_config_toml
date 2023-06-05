@@ -11,13 +11,6 @@ fn main() {
         Ok(_) => println!("merge env files success"),
         Err(e) => println!("merge env files failed: {}", e),
     }
-//     let a = "
-// # nice
-// asd
-// qwe
-// ";
-//     let a = a.trim().lines().filter(|s| !s.starts_with("#")).collect::<Vec<_>>().join("||||");
-//     println!("A=\"{}\"", a);
 }
 
 
