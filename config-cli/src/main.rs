@@ -1,3 +1,4 @@
+use std::env;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, BufWriter, Seek, Write};
 use std::path::Path;
@@ -5,8 +6,13 @@ use glob::glob;
 use env_file_reader::read_file;
 
 fn main() {
-    let source = "F:\\Github\\ne8u14\\core-canister\\src\\env_configs\\dev.principals.env";
-    let out = "C:\\Users\\77162\\Desktop\\out_cargo\\Cargo.toml";
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 3 {
+        println!("Usage: {} <source> <out>", args[0]);
+        return;
+    }
+    let source = &args[1];
+    let out = &args[2];
     match merge_env_files(source, out) {
         Ok(_) => println!("merge env files success"),
         Err(e) => println!("merge env files failed: {}", e),
