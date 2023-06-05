@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+
 use std::env;
-use std::fs::{File, OpenOptions, read_to_string, write};
-use std::io::{BufRead, BufReader, BufWriter, Seek, SeekFrom, Write};
+use std::fs::{File, read_to_string, write};
+use std::io::{BufRead, BufWriter, Write};
 use std::path::Path;
 use glob::glob;
 use env_file_reader::read_file;
@@ -83,7 +83,7 @@ fn merge_env_files(source: &str, out: &str) -> Result<(), Box<dyn std::error::Er
 
         write(toml_path, toml_str.as_bytes())?;
     } else {
-        let mut file = File::create(toml_path)?;
+        let file = File::create(toml_path)?;
         let mut writer = BufWriter::new(&file);
         writer.write_all(start.as_bytes())?;
         writer.write_all(b"[env]\n")?;
