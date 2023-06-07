@@ -1,7 +1,7 @@
 use clap::Parser;
 use env_file_reader::read_file;
 use glob::glob;
-use log::{debug, info, LevelFilter, trace};
+use log::{debug, error, info, LevelFilter, trace};
 use simple_logger::SimpleLogger;
 use std::collections::{HashMap};
 
@@ -35,7 +35,7 @@ fn main() {
             file.write_all(&bytes).unwrap();
             info!("merge env files success");
         }
-        Err(e) => info!("merge env files failed: {}", e),
+        Err(e) => error!("merge env files failed: {}", e),
     }
 }
 
