@@ -31,8 +31,8 @@ fn main() {
     args.init_log();
     match args.get_merge_bytes() {
         Ok(bytes) => {
-            let mut file = File::create(args.get_out_path()).unwrap();
-            file.write_all(&bytes).unwrap();
+            let mut file = File::create(args.get_out_path()).expect("Failed to create file");
+            file.write_all(&bytes).expect("Failed to write to file");
             info!("Merge env files success");
         }
         Err(e) => error!("Merge env files failed: {}", e),
