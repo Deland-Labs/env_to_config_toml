@@ -2,7 +2,7 @@ use env_file_reader::read_file;
 use glob::glob;
 use std::env;
 use std::fs::{read_to_string, write, File};
-use std::io::{BufRead, BufWriter, Write};
+use std::io::{BufWriter, Write};
 use std::path::Path;
 use log::{debug, info};
 
@@ -35,8 +35,16 @@ fn merge_env_files(source: &str, out: &str) -> Result<(), Box<dyn std::error::Er
 
     let toml_path = Path::new(out);
     if toml_path.exists() {
+        debug!("Merging into existing file: {:?}", toml_path);
         merge_existing_toml(toml_path, &env_vars)?;
     } else {
+        debug!("Creating new file in: {:?}", toml_path);
+        let parent = toml_path.parent().expect("Failed to get parent directory");
+        if !parent.exists() {
+            debug!("Creating parent directory: {:?}", parent);
+            std::fs::create_dir_all(parent)?;
+        }
+
         let file = File::create(toml_path)?;
         let mut writer = BufWriter::new(&file);
         writer.write_all(START.as_bytes())?;
@@ -68,7 +76,7 @@ fn read_env_vars(env_paths: &[std::path::PathBuf]) -> Result<Vec<(String, String
             env_vars.insert(key, value);
         }
     }
-    let mut env_vars: Vec<_> = env_vars.iter().map((|(k, v)| (k.clone(), v.clone()))).collect();
+    let mut env_vars: Vec<_> = env_vars.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
     env_vars.sort_by_key(|(key, _)| key.to_lowercase());
     Ok(env_vars)
 }
@@ -83,11 +91,15 @@ fn merge_existing_toml(
 
     let env_table = table
         .entry("env".to_owned())
-        .or_insert_with(|| toml::Value::Table(toml::value::Table::new()))
+        .or_insert_with(|| {
+            debug!("Creating new [env] section");
+            toml::Value::Table(toml::value::Table::new())
+        })
         .as_table_mut()
         .expect("Invalid TOML file: missing [env] section");
 
     for (key, value) in env_vars {
+        debug!("Adding env var: {}={}", key, value);
         env_table.insert(key.to_owned(), toml::Value::String(value.to_owned()));
     }
     let env_line_count = env_table.len();
@@ -120,7 +132,7 @@ fn merge_existing_toml(
 fn test_merge_env_files_new() {
     let _ = std::fs::remove_file("src/test_data/config.toml");
 
-    let source = "src/test_data/*.env";
+    let source = "src/test_data/[0-9].env";
     let out = "src/test_data/config.toml";
     merge_env_files(source, out).unwrap();
 
@@ -130,11 +142,24 @@ fn test_merge_env_files_new() {
 }
 
 #[test]
+fn test_merge_env_files_new_folder() {
+    let _ = std::fs::remove_file("src/test_data/new_folder/config.toml");
+
+    let source = "src/test_data/[0-9].env";
+    let out = "src/test_data/new_folder/config.toml";
+    merge_env_files(source, out).unwrap();
+
+    let config_content = std::fs::read_to_string("src/test_data/new_folder/config.toml").unwrap();
+    let verify_content = std::fs::read_to_string("src/test_data/new_verify.toml").unwrap();
+    assert_eq!(config_content, verify_content);
+}
+
+#[test]
 fn test_merge_env_files_exist() {
     let _ = std::fs::remove_file("src/test_data/config.toml");
     let _ = std::fs::copy("src/test_data/old.toml", "src/test_data/config.toml").unwrap();
 
-    let source = "src/test_data/*.env";
+    let source = "src/test_data/[0-9].env";
     let out = "src/test_data/config.toml";
     merge_env_files(source, out).unwrap();
 
@@ -143,16 +168,28 @@ fn test_merge_env_files_exist() {
     assert_eq!(config_content, verify_content);
 }
 
+
 #[test]
 fn test_merge_env_files_overwrite() {
     let _ = std::fs::remove_file("src/test_data/config.toml");
     let _ = std::fs::copy("src/test_data/overwrite.toml", "src/test_data/config.toml").unwrap();
 
-    let source = "src/test_data/*.env";
+    let source = "src/test_data/[0-9].env";
     let out = "src/test_data/config.toml";
     merge_env_files(source, out).unwrap();
 
     let config_content = std::fs::read_to_string("src/test_data/config.toml").unwrap();
     let verify_content = std::fs::read_to_string("src/test_data/overwrite_verify.toml").unwrap();
     assert_eq!(config_content, verify_content);
+}
+
+#[test]
+fn test_merge_env_files_duplicate() {
+    let _ = std::fs::remove_file("src/test_data/config.toml");
+    let _ = std::fs::copy("src/test_data/overwrite.toml", "src/test_data/config.toml").unwrap();
+
+    let source = "src/test_data/*.env";
+    let out = "src/test_data/config.toml";
+    let result = merge_env_files(source, out);
+    assert!(result.is_err());
 }
