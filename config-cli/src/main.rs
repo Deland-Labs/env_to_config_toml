@@ -33,9 +33,9 @@ fn main() {
         Ok(bytes) => {
             let mut file = File::create(args.get_out_path()).unwrap();
             file.write_all(&bytes).unwrap();
-            info!("merge env files success");
+            info!("Merge env files success");
         }
-        Err(e) => error!("merge env files failed: {}", e),
+        Err(e) => error!("Merge env files failed: {}", e),
     }
 }
 
@@ -97,7 +97,7 @@ impl Args {
             .filter(|path| path.is_file())
             .collect();
         if env_paths.is_empty() {
-            return Err(format!("Pattern is Invalid: {}", self.pattern).into());
+            return Err(format!("File not found: {}", self.pattern).into());
         }
 
         env_paths.sort_by_key(|path| path.to_str().unwrap().to_lowercase());
