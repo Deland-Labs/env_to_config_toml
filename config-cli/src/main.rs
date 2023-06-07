@@ -88,10 +88,7 @@ impl Args {
                     .out_path
                     .parent()
                     .expect("Failed to get parent directory");
-                if !parent.exists() {
-                    debug!("Creating parent directory: {:?}", parent);
-                    std::fs::create_dir_all(parent)?;
-                }
+                std::fs::create_dir_all(parent)?;
                 let result = self.merge_existing_toml(&env_vars, "")?;
                 Ok(result)
             }
