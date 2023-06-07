@@ -210,8 +210,10 @@ mod tests {
     #[test]
     fn test_merge_env_files_new_folder() {
         let out = Path::new("src/test_data/new_folder/new_folder_config.toml");
+        let new_folder = Path::new("src/test_data/new_folder");
         let _ = std::fs::remove_file(out);
-        let _ = std::fs::remove_dir("src/test_data/new_folder");
+        let _ = std::fs::remove_dir(new_folder);
+        assert!(!new_folder.exists());
         let pattern = "src/test_data/[0-9].env";
         let args = Args {
             pattern: pattern.to_owned(),
@@ -223,6 +225,7 @@ mod tests {
         let config_content = String::from_utf8(bytes).unwrap();
         let verify_content = std::fs::read_to_string("src/test_data/new_verify.toml").unwrap();
         assert_eq!(config_content, verify_content);
+        assert!(new_folder.exists());
     }
 
     #[test]
