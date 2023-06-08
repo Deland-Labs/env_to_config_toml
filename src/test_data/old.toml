@@ -1,0 +1,11 @@
+
+[env]
+E = "asd||||qwe"
+F = "asd||||qwe||||asd||||qaaa||||ccc"
+G = "123||||qwe||||ddd||||qaaa||||ccc"
+
+
+[test]
+Y = "asd||||qwe"
+U = "asd||||qwe||||asd||||qaaa||||ccc"
+I = "123||||qwe||||ddd||||qaaa||||ccc"
