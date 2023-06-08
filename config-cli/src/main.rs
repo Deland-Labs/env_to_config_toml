@@ -30,8 +30,8 @@ fn main() {
 
 #[derive(Error, Debug)]
 pub enum MergeError {
-    #[error("Duplicate key: {0} in {1}")]
-    DuplicateKey(String, String),
+    #[error("Duplicate key: {0} in {1} and {2}")]
+    DuplicateKey(String, String, String),
     #[error("No file found for the pattern: {0}")]
     NoFileFound(String),
 }
@@ -48,7 +48,7 @@ struct Args {
     #[arg(short, long)]
     out_path: PathBuf,
 
-    /// Optional Log Level (0 = info, 1 = debug, 2 = trace)
+    /// Optional log level (None = info, v = debug, vvvv = trace)
     #[arg(short, long)]
     log_level: Option<String>,
 }
@@ -57,14 +57,14 @@ impl Args {
     pub fn init_log(&self) {
         let log_level = match &self.log_level {
             None => LevelFilter::Info,
-            Some(level) if level == "debug" => LevelFilter::Debug,
-            Some(level) if level == "trace" => LevelFilter::Trace,
+            Some(level) if level == "v" => LevelFilter::Debug,
+            Some(level) if level == "vvvv" => LevelFilter::Trace,
             _ => LevelFilter::Debug,
         };
         SimpleLogger::new().with_level(log_level).init().unwrap();
     }
 
-    pub fn get_out_path(&self) -> &std::path::PathBuf {
+    pub fn get_out_path(&self) -> &PathBuf {
         &self.out_path
     }
 
@@ -104,6 +104,7 @@ impl Args {
 
         env_paths.sort_by_key(|path| path.to_str().unwrap().to_lowercase());
         let mut env_vars = HashMap::new();
+        let mut env_paths_by_key = HashMap::new();
         for env_path in env_paths {
             info!("Reading env file: {:?}", env_path);
             let env = read_file(env_path.clone())?;
@@ -115,11 +116,13 @@ impl Args {
                     .collect::<Vec<_>>()
                     .join("||||");
                 if env_vars.contains_key(&key) {
+                    let duplicate_path: &PathBuf = env_paths_by_key.get(&key).unwrap();
                     return Err(
-                        MergeError::DuplicateKey(key, env_path.display().to_string()).into(),
+                        MergeError::DuplicateKey(key, env_path.display().to_string(), duplicate_path.display().to_string()).into(),
                     );
                 }
-                env_vars.insert(key, value);
+                env_vars.insert(key.clone(), value);
+                env_paths_by_key.insert(key, env_path.clone());
             }
         }
         let mut env_vars: Vec<_> = env_vars
@@ -145,7 +148,7 @@ impl Args {
                 toml::Value::Table(toml::value::Table::new())
             })
             .as_table_mut()
-            .expect("Invalid TOML file: missing [env] section");
+            .unwrap();
 
         for (key, value) in env_vars {
             if env_table.contains_key(key) {
@@ -277,12 +280,18 @@ mod tests {
             .filter_map(Result::ok)
             .filter(|path| path.is_file())
             .collect::<Vec<_>>();
+        let env_path = env_paths[0].clone();
+        let env_paths: Vec<PathBuf> = glob("src/test_data/1.env")
+            .expect("Failed to read glob pattern")
+            .filter_map(Result::ok)
+            .filter(|path| path.is_file())
+            .collect::<Vec<_>>();
         let duplicate_path = env_paths[0].clone();
 
         let result = args.get_merge_bytes().err().unwrap();
         assert_eq!(
             result.to_string(),
-            MergeError::DuplicateKey("A".to_owned(), duplicate_path.display().to_string())
+            MergeError::DuplicateKey("A".to_owned(), env_path.display().to_string(), duplicate_path.display().to_string())
                 .to_string()
         );
     }
