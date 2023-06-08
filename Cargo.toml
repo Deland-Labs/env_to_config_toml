@@ -1,7 +1,14 @@
 [package]
-name = "config-cli"
+name = "env-to-config-toml"
 version = "0.1.0"
 edition = "2021"
+authors = ["Deland Labs Core Dev <delandlabs@gmail.com>"]
+license = "MIT"
+description = "A tool to search files"
+homepage = "https://github.com/Deland-Labs/env_to_config_toml"
+repository = "https://github.com/Deland-Labs/env_to_config_toml"
+keywords = ["cli", "env"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
