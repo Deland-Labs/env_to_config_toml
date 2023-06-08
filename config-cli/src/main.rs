@@ -121,9 +121,12 @@ impl Args {
                     .join("||||");
                 if env_vars.contains_key(&key) {
                     let duplicate_path: &PathBuf = env_paths_by_key.get(&key).unwrap();
-                    return Err(
-                        MergeError::DuplicateKey(key, env_path.display().to_string(), duplicate_path.display().to_string()).into(),
-                    );
+                    return Err(MergeError::DuplicateKey(
+                        key,
+                        env_path.display().to_string(),
+                        duplicate_path.display().to_string(),
+                    )
+                    .into());
                 }
                 env_vars.insert(key.clone(), value);
                 env_paths_by_key.insert(key, env_path.clone());
@@ -205,7 +208,8 @@ mod tests {
         let args = Args {
             pattern: pattern.to_owned(),
             out_path: out.to_owned(),
-            log_level: None,
+            v: false,
+            vvvv: false,
         };
 
         let bytes = args.get_merge_bytes().unwrap();
@@ -225,7 +229,8 @@ mod tests {
         let args = Args {
             pattern: pattern.to_owned(),
             out_path: out.to_owned(),
-            log_level: None,
+            v: false,
+            vvvv: false,
         };
 
         let bytes = args.get_merge_bytes().unwrap();
@@ -243,7 +248,8 @@ mod tests {
         let args = Args {
             pattern: pattern.to_owned(),
             out_path: out.to_owned(),
-            log_level: None,
+            v: false,
+            vvvv: false,
         };
 
         let bytes = args.get_merge_bytes().unwrap();
@@ -260,7 +266,8 @@ mod tests {
         let args = Args {
             pattern: pattern.to_owned(),
             out_path: out.to_owned(),
-            log_level: None,
+            v: false,
+            vvvv: false,
         };
         let bytes = args.get_merge_bytes().unwrap();
         let config_content = String::from_utf8(bytes).unwrap();
@@ -277,7 +284,8 @@ mod tests {
         let args = Args {
             pattern: pattern.to_owned(),
             out_path: out.to_owned(),
-            log_level: None,
+            v: false,
+            vvvv: false,
         };
         let env_paths: Vec<PathBuf> = glob("src/test_data/duplicate.env")
             .expect("Failed to read glob pattern")
@@ -295,8 +303,12 @@ mod tests {
         let result = args.get_merge_bytes().err().unwrap();
         assert_eq!(
             result.to_string(),
-            MergeError::DuplicateKey("A".to_owned(), env_path.display().to_string(), duplicate_path.display().to_string())
-                .to_string()
+            MergeError::DuplicateKey(
+                "A".to_owned(),
+                env_path.display().to_string(),
+                duplicate_path.display().to_string()
+            )
+            .to_string()
         );
     }
 
@@ -308,7 +320,8 @@ mod tests {
         let args = Args {
             pattern: pattern.to_owned(),
             out_path: out.to_owned(),
-            log_level: None,
+            v: false,
+            vvvv: false,
         };
         let result = args.get_merge_bytes().err().unwrap();
         assert_eq!(
