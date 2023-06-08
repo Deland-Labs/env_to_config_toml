@@ -109,3 +109,4 @@ Cargo.lock
 /config-cli/src/test_data/duplicate_config.toml
 /config-cli/src/test_data/exist_config.toml
 /config-cli/src/test_data/overwrite_config.toml
+/config-cli/src/test_data/config.toml

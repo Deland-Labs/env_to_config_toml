@@ -38,7 +38,7 @@ pub enum MergeError {
 
 /// Merge multiple .env files into one
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
+#[command(author, about, long_about = None)]
 struct Args {
     /// The directory containing .env files
     #[arg(short, long)]
@@ -48,18 +48,22 @@ struct Args {
     #[arg(short, long)]
     out_path: PathBuf,
 
-    /// Optional log level (None = info, v = debug, vvvv = trace)
-    #[arg(short, long)]
-    log_level: Option<String>,
+    /// Debug log level
+    #[arg(long)]
+    v: bool,
+    /// Trace log level
+    #[arg(long)]
+    vvvv: bool,
 }
 
 impl Args {
     pub fn init_log(&self) {
-        let log_level = match &self.log_level {
-            None => LevelFilter::Info,
-            Some(level) if level == "v" => LevelFilter::Debug,
-            Some(level) if level == "vvvv" => LevelFilter::Trace,
-            _ => LevelFilter::Debug,
+        let log_level = if self.vvvv {
+            LevelFilter::Trace
+        } else if self.v {
+            LevelFilter::Debug
+        } else {
+            LevelFilter::Info
         };
         SimpleLogger::new().with_level(log_level).init().unwrap();
     }
